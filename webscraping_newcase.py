@@ -2,20 +2,21 @@ import os
 import shutil
 import smtplib
 import time
-import warnings
+import numpy as np
+import pandas as pd
+
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-import numpy as np
-import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from sqlalchemy import create_engine
+from .config import (loginAccount, loginPassword,
+                     emailLoginUser, emailLoginPassword,
+                     recipients, db_info)
 
-from .config import loginAccount, loginPassword
-
+import warnings
 warnings.filterwarnings('ignore')
 
 options = Options()
@@ -155,8 +156,8 @@ def send_email(filename, dt, rowsnum):
     server = smtplib.SMTP()
     server.connect('smtp.partner.outlook.cn')
     server.starttls()
-    server.login(user='yumingmin@ppdai.com',
-                 password='PPDcs326029')
+    server.login(user=emailLoginUser,
+                 password=emailLoginPassword)
     
     context = {'run_date': run_date, 'rows_num': rows_num}
     
@@ -171,10 +172,8 @@ def send_email(filename, dt, rowsnum):
     msg = MIMEMultipart('related')
     msg.attach(msgtext)
 
-    recipients = ['yumingmin@ppdai.com', 'mingjiao02@ppdai.com', 'chenwei07@ppdai.com', 
-                  'zhangzhongzheng@ppdai.com', 'cs_jigou@ppdai.com']
     msg['from'] = 'yumingmin@ppdai.com'
-    msg['to'] = ','.join(recipients)
+    msg['to'] = recipients
     msg['subject'] = '趣回购爬虫{run_date}当日新案信息'.format(**context)
 
     att = MIMEText(open('%s'% fn, 'rb').read(), 'base64', 'utf-8')
@@ -183,12 +182,13 @@ def send_email(filename, dt, rowsnum):
 
     msg.attach(att)
     server.sendmail(msg['from'], 
-                    msg['to'].split(','), 
+                    msg['to'],
                     msg.as_string()) 
     server.quit()
 
 # 发送邮件
 send_email(filename=outputfile_xlsx, dt=now_fmt, rowsnum=userInfo_rowsnum)
+
 # 导入 mysql
 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 df_baseInfo_all['record_creation_time'] = now
@@ -232,8 +232,8 @@ rename_cols2 = { '姓名': 'user_name',
                '联系人号码': 'user_contacts_mobphone'}
 df_userContacts_all_rename = df_userContacts_all.rename(columns=rename_cols2)
 
-engine = create_engine('mysql+pymysql://cuishou:PPDcs2018@10.128.108.42:3306/bpo?charset=utf8',
-                                          encoding='utf8', convert_unicode=True)
+db_conn = 'mysql+pymysql://{user}:{password}@{IP}:3306/{db}?charset=utf8'.format(**db_info)
+engine = create_engine(db_conn, encoding='utf8', convert_unicode=True)
 df_baseInfo_all_reanme.to_sql('quhuigou_user_baseinfo', engine, if_exists='append', index=False, chunksize=10000)
 df_userContacts_all_rename.to_sql('quhuigou_user_contacts', engine, if_exists='append', index=False, chunksize=10000)
 
