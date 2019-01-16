@@ -12,7 +12,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from sqlalchemy import create_engine
-from .config import (loginAccount, loginPassword,
+from config import (loginAccount, loginPassword,
                      emailLoginUser, emailLoginPassword,
                      recipients, db_info)
 
@@ -26,7 +26,7 @@ options.add_argument('disable-infobars')
 options.add_experimental_option("excludeSwitches", ["ignore-certificate-errors"])
 # options.add_argument('--disable-dev-shm-usage')
 
-html = webdriver.Chrome(executable_path="d:\\anaconda3\\chromedriver.exe", chrome_options=options)
+html = webdriver.Chrome(executable_path="c:\\anaconda3\\chromedriver.exe", chrome_options=options)
 html.implicitly_wait(60)
 html.maximize_window()
 
